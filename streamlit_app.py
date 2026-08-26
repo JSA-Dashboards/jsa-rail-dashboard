@@ -11,9 +11,9 @@ import numpy as np
 from pathlib import Path
 from datetime import datetime
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # PAGE CONFIG (must be first Streamlit call)
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 st.set_page_config(
     page_title="JSA Rail Shipments",
     page_icon="🚂",
@@ -35,38 +35,38 @@ except Exception as _usda_err:
     st.error(f"usda_api import failed: {_usda_err}")
     st.stop()
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # CONSTANTS & COLORS
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 BASE = Path(__file__).parent
 
-# JSA brand palette
+# JSA brand palette — light mode
 C = {
-    "BG":      "#0e1614",
-    "CARD":    "#162019",
-    "CARD2":   "#1e2e2a",
-    "BORDER":  "#243328",
+    "BG":      "#f4f7f6",
+    "CARD":    "#ffffff",
+    "CARD2":   "#eaf1ef",
+    "BORDER":  "#cfdeda",
     "PRIMARY": "#4a5d58",
-    "TEXT":    "#d4e8e4",
-    "DIM":     "#7a9990",
-    "MID":     "#a8c5bf",
-    "POS":     "#4ade80",
-    "NEG":     "#f87171",
-    "BLUE":    "#4aa3dc",
-    "GOLD":    "#fbbf24",
+    "TEXT":    "#1a2e2a",
+    "DIM":     "#5a7570",
+    "MID":     "#3a5550",
+    "POS":     "#16a34a",
+    "NEG":     "#dc2626",
+    "BLUE":    "#1d6fa3",
+    "GOLD":    "#b45309",
 }
 
-# Railroad colors
+# Railroad colors — saturated for light backgrounds
 RR_COLORS = {
-    "BNSF":    "#4a9d8c",
-    "CN":      "#a78bfa",
-    "CP":      "#60a5fa",
-    "CPKC":    "#34d399",
-    "CP/CPKC": "#60a5fa",
-    "CSX":     "#f87171",
-    "KCS":     "#e879f9",
-    "NS":      "#fbbf24",
-    "UP":      "#fb923c",
+    "BNSF":    "#0f766e",
+    "CN":      "#6d28d9",
+    "CP":      "#1d4ed8",
+    "CPKC":    "#059669",
+    "CP/CPKC": "#1d4ed8",
+    "CSX":     "#dc2626",
+    "KCS":     "#9333ea",
+    "NS":      "#b45309",
+    "UP":      "#c2410c",
 }
 
 MONTH_ORDER = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
@@ -74,78 +74,53 @@ MONTH_ORDER = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov"
 WESTERN_STATES = ["IA","NE","SD","ND","MN","KS","MO"]
 EASTERN_STATES = ["IL","IN","OH","MI","KY"]
 
-# ─────────────────────────────────────────────
-# CSS INJECTION — JSA dark theme
-# ─────────────────────────────────────────────
-st.markdown(f"""
-<style>
-  /* Global background */
-  .stApp, .main, [data-testid="stAppViewContainer"] {{
-      background-color: {C['BG']} !important;
-      color: {C['TEXT']} !important;
-  }}
-  /* Sidebar */
-  [data-testid="stSidebar"] {{ background-color: {C['CARD']} !important; }}
-  /* All block containers */
-  .block-container {{ padding-top: 0 !important; background-color: {C['BG']}; }}
-  /* Metric cards */
-  [data-testid="stMetric"] {{
-      background-color: {C['CARD']} !important;
-      border: 1px solid {C['BORDER']} !important;
-      border-radius: 8px !important;
-      padding: 12px 16px !important;
-  }}
-  [data-testid="stMetricValue"] {{ color: {C['TEXT']} !important; font-size: 1.5rem !important; }}
-  [data-testid="stMetricDelta"] {{ font-size: 0.85rem !important; }}
-  [data-testid="stMetricLabel"] {{ color: {C['MID']} !important; font-size: 0.8rem !important; }}
-  /* Tabs */
-  .stTabs [data-baseweb="tab-list"] {{
-      background-color: {C['CARD']} !important;
-      border-bottom: 1px solid {C['BORDER']} !important;
-      gap: 2px;
-  }}
-  .stTabs [data-baseweb="tab"] {{
-      background-color: transparent !important;
-      color: {C['DIM']} !important;
-      border-radius: 6px 6px 0 0 !important;
-      padding: 8px 18px !important;
-      font-size: 0.85rem;
-  }}
-  .stTabs [aria-selected="true"] {{
-      background-color: {C['CARD2']} !important;
-      color: {C['TEXT']} !important;
-      border-top: 2px solid {C['POS']} !important;
-  }}
-  .stTabs [data-baseweb="tab-panel"] {{
-      background-color: {C['BG']} !important;
-      padding-top: 12px !important;
-  }}
-  /* Selectbox / radio / multiselect */
-  .stSelectbox > div > div,
-  .stMultiSelect > div > div {{
-      background-color: {C['CARD']} !important;
-      border: 1px solid {C['BORDER']} !important;
-      color: {C['TEXT']} !important;
-  }}
-  .stRadio > div {{ color: {C['MID']} !important; }}
-  label[data-testid="stWidgetLabel"] {{ color: {C['MID']} !important; font-size: 0.8rem; }}
-  /* Dataframe */
-  [data-testid="stDataFrame"] {{ background-color: {C['CARD']} !important; }}
-  .dvn-scroller {{ background-color: {C['CARD']} !important; }}
-  /* Captions */
-  .stCaption {{ color: {C['DIM']} !important; }}
-  /* Dividers */
-  hr {{ border-color: {C['BORDER']} !important; }}
-  /* Scrollbars */
-  ::-webkit-scrollbar {{ width: 6px; height: 6px; }}
-  ::-webkit-scrollbar-track {{ background: {C['BG']}; }}
-  ::-webkit-scrollbar-thumb {{ background: {C['PRIMARY']}; border-radius: 3px; }}
-</style>
-""", unsafe_allow_html=True)
+# ---------------------------------------------
+# CSS INJECTION - JSA light theme
+# ---------------------------------------------
+_CSS_TEMPLATE = (
+    "<style>"
+    "  .stApp, .main, [data-testid=stAppViewContainer] {{"
+    "    background-color: {BG} !important; color: {TEXT} !important; }}"
+    "  [data-testid=stSidebar] {{ background-color: {CARD} !important; }}"
+    "  .block-container {{ padding-top: 0 !important; background-color: {BG}; }}"
+    "  [data-testid=stMetric] {{"
+    "    background-color: {CARD} !important;"
+    "    border: 1px solid {BORDER} !important;"
+    "    border-radius: 8px !important; padding: 12px 16px !important; }}"
+    "  [data-testid=stMetricValue] {{ color: {TEXT} !important; font-size: 1.5rem !important; }}"
+    "  [data-testid=stMetricDelta] {{ font-size: 0.85rem !important; }}"
+    "  [data-testid=stMetricLabel] {{ color: {MID} !important; font-size: 0.8rem !important; }}"
+    "  .stTabs [data-baseweb=tab-list] {{"
+    "    background-color: {CARD} !important;"
+    "    border-bottom: 1px solid {BORDER} !important; gap: 2px; }}"
+    "  .stTabs [data-baseweb=tab] {{"
+    "    background-color: transparent !important; color: {DIM} !important;"
+    "    border-radius: 6px 6px 0 0 !important; padding: 8px 18px !important;"
+    "    font-size: 0.85rem; }}"
+    "  .stTabs [aria-selected=true] {{"
+    "    background-color: {CARD2} !important; color: {TEXT} !important;"
+    "    border-top: 2px solid {POS} !important; }}"
+    "  .stTabs [data-baseweb=tab-panel] {{"
+    "    background-color: {BG} !important; padding-top: 12px !important; }}"
+    "  .stSelectbox > div > div, .stMultiSelect > div > div {{"
+    "    background-color: {CARD} !important;"
+    "    border: 1px solid {BORDER} !important; color: {TEXT} !important; }}"
+    "  .stRadio > div {{ color: {MID} !important; }}"
+    "  label[data-testid=stWidgetLabel] {{ color: {MID} !important; font-size: 0.8rem; }}"
+    "  [data-testid=stDataFrame] {{ background-color: {CARD} !important; }}"
+    "  .dvn-scroller {{ background-color: {CARD} !important; }}"
+    "  .stCaption {{ color: {DIM} !important; }}"
+    "  hr {{ border-color: {BORDER} !important; }}"
+    "  ::-webkit-scrollbar {{ width: 6px; height: 6px; }}"
+    "  ::-webkit-scrollbar-track {{ background: {BG}; }}"
+    "  ::-webkit-scrollbar-thumb {{ background: {PRIMARY}; border-radius: 3px; }}"
+    "</style>"
+)
+st.markdown(_CSS_TEMPLATE.format(**C), unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # BASE PLOTLY LAYOUT
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 def base_layout(**kwargs):
     """Return a dict of common Plotly layout settings with JSA dark theme."""
     layout = dict(
@@ -172,9 +147,9 @@ def base_layout(**kwargs):
     layout.update(kwargs)
     return layout
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # HELPER FUNCTIONS
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 def oly_avg(vals):
     """Olympic average: drop highest and lowest, return mean of rest.
     Requires at least 4 values; otherwise returns simple mean (or 0 if empty).
@@ -197,7 +172,7 @@ def pct(curr, base):
 
 
 def fbu(n):
-    """Format bushel counts: >=1B → '1.23B', >=1M → '12.3M', >=1K → '123K', else int."""
+    """Format bushel counts: >=1B -> '1.23B', >=1M -> '12.3M', >=1K -> '123K', else int."""
     n = float(n)
     if abs(n) >= 1_000_000_000:
         return f"{n/1_000_000_000:.2f}B"
@@ -209,18 +184,18 @@ def fbu(n):
 
 
 def fdiff(curr, base):
-    """Format difference as '+12.3M' or '—' if base is 0."""
+    """Format difference as '+12.3M' or '-' if base is 0."""
     if not base:
-        return "—"
+        return "-"
     diff = curr - base
     sign = "+" if diff >= 0 else ""
     return f"{sign}{fbu(diff)}"
 
 
 def fpct(v):
-    """Format percent as '+12.3%' or '—' if None."""
+    """Format percent as '+12.3%' or '-' if None."""
     if v is None:
-        return "—"
+        return "-"
     sign = "+" if v >= 0 else ""
     return f"{sign}{v:.1f}%"
 
@@ -230,9 +205,9 @@ def bar_color(v):
     return C["POS"] if (v is not None and v >= 0) else C["NEG"]
 
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # DATA LOADING
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 VALID_STATES = [
     'AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS',
     'KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH',
@@ -240,7 +215,7 @@ VALID_STATES = [
     'VA','VT','WA','WI','WV','WY',
 ]
 
-# ── Sidebar — data source controls ───────────────────────────────────────────
+# -- Sidebar - data source controls -------------------------------------------
 with st.sidebar:
     st.markdown(
         f"<div style='color:{C['TEXT']};font-size:14px;font-weight:600;"
@@ -250,7 +225,7 @@ with st.sidebar:
     app_token = st.text_input(
         "USDA App Token (optional)",
         type="password",
-        help="Free token from agtransport.usda.gov — increases rate limits.",
+        help="Free token from agtransport.usda.gov - increases rate limits.",
     )
     if st.button("🔄 Refresh from Live API"):
         st.cache_data.clear()
@@ -287,7 +262,7 @@ except Exception:
 _effective_token = app_token or _secret_token
 
 if st.session_state.get("force_api"):
-    with st.spinner("Fetching latest USDA data from API…"):
+    with st.spinner("Fetching latest USDA data from API..."):
         try:
             _df_raw, _last_updated = load_from_api(_effective_token)
             _data_source = "LIVE API"
@@ -300,7 +275,7 @@ else:
         _df_raw, _last_updated = load_from_file()
         _data_source = "Bundled"
     else:
-        with st.spinner("Fetching USDA data…"):
+        with st.spinner("Fetching USDA data..."):
             try:
                 _df_raw, _last_updated = load_from_api(_effective_token)
                 _data_source = "LIVE API"
@@ -312,9 +287,9 @@ else:
 # (KCS state='US' is excluded automatically from state charts/maps)
 df = _df_raw
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # BRANDED HEADER  (needs _data_source + _last_updated from load_df)
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 if _data_source == "LIVE API":
     _src_badge = (
         "<span style='background:#1a3530;border:1px solid " + C['POS'] + ";"
@@ -381,9 +356,9 @@ def get_cp_rrs(df, cp_mode):
 
 all_years = sorted(df['Market Year'].dropna().unique().tolist())
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # TAB STRUCTURE
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📊 Progress",
     "🚂 Railroad by Month",
@@ -393,11 +368,11 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📋 Summary",
 ])
 
-# ══════════════════════════════════════════════
-# TAB 1 — PROGRESS
-# ══════════════════════════════════════════════
+# 
+# TAB 1 - PROGRESS
+# 
 with tab1:
-    # ── Controls ──────────────────────────────
+    # -- Controls ------------------------------
     c1, c2, c3, c4 = st.columns([1.5, 1.5, 2, 2])
     with c1:
         sel_yr = st.selectbox(
@@ -416,10 +391,10 @@ with tab1:
         states_avail1 = sorted(df['State'].dropna().unique().tolist())
         sel_state1 = st.selectbox("State", ["All"] + states_avail1, key="t1_state")
 
-    # ── Context caption ───────────────────────
+    # -- Context caption -----------------------
     max_wk = int(df[df['Market Year'] == sel_yr]['MY Week'].max())
 
-    # All years are strings like "2025/26" — look up by index, never do arithmetic
+    # All years are strings like "2025/26" - look up by index, never do arithmetic
     _yr_idx = all_years.index(sel_yr)
     ly_yr   = all_years[_yr_idx - 1] if _yr_idx > 0 else None
 
@@ -430,14 +405,14 @@ with tab1:
     # Identify if we're in a split mode where CP/CPKC comparisons are ambiguous
     is_split = (cp_mode1 == "Split")
 
-    pool_label = f"{min(pool_years)}–{max(pool_years)}" if pool_years else "—"
+    pool_label = f"{min(pool_years)}-{max(pool_years)}" if pool_years else "-"
     st.caption(
-        f"{sel_yr} — Week {max_wk} · "
-        f"vs LY: {ly_yr or 'N/A'} · "
+        f"{sel_yr} - Week {max_wk} * "
+        f"vs LY: {ly_yr or 'N/A'} * "
         f"6-yr avg: {pool_label} (drop hi/lo)"
     )
 
-    # ── Inner helpers ─────────────────────────
+    # -- Inner helpers -------------------------
     def _s(d, year, rr=None, state=None):
         """Sum Est Bushels for given year up to max_wk, optionally filtered."""
         mask = (d['Market Year'] == year) & (d['MY Week'] <= max_wk)
@@ -461,26 +436,28 @@ with tab1:
             pct_avg=pct(curr, avg),
         )
 
-    # ── Railroad Summary Table ────────────────
+    # -- Railroad Summary Table ----------------
     st.markdown(f"<h4 style='color:{C['TEXT']}; margin:8px 0 4px 0;'>Railroad Summary</h4>", unsafe_allow_html=True)
+
+    _st_filter = sel_state1 if sel_state1 != "All" else None
 
     rr_rows = []
     all_rrs = get_cp_rrs(dfc1, cp_mode1)
     for rr in all_rrs:
-        m = metrics(rr=rr)
+        m = metrics(rr=rr, state=_st_filter)
         # In split mode, CP & CPKC won't have meaningful LY (CPKC didn't exist)
         hide_compare = is_split and rr in ("CP", "CPKC")
         rr_rows.append({
             "Railroad":       rr,
             "MYtD Bu":        fbu(m['current']),
-            "vs LY":          "—" if hide_compare else fdiff(m['current'], m['ly']),
-            "% vs LY":        "—" if hide_compare else fpct(m['pct_ly']),
-            "vs 6-Yr Avg":    "—" if hide_compare else fdiff(m['current'], m['avg']),
-            "% vs Avg":       "—" if hide_compare else fpct(m['pct_avg']),
+            "vs LY":          "-" if hide_compare else fdiff(m['current'], m['ly']),
+            "% vs LY":        "-" if hide_compare else fpct(m['pct_ly']),
+            "vs 6-Yr Avg":    "-" if hide_compare else fdiff(m['current'], m['avg']),
+            "% vs Avg":       "-" if hide_compare else fpct(m['pct_avg']),
         })
 
     # Totals row
-    tot = metrics()
+    tot = metrics(state=_st_filter)
     rr_rows.append({
         "Railroad":    "TOTAL",
         "MYtD Bu":     fbu(tot['current']),
@@ -491,21 +468,16 @@ with tab1:
     })
 
     tbl_df = pd.DataFrame(rr_rows)
-    st.dataframe(
-        tbl_df,
-        width='stretch',
-        hide_index=True,
-        height=min(42 * (len(rr_rows) + 1) + 38, 500),
-    )
+    st.table(tbl_df)
 
     st.markdown("---")
 
-    # ── Railroad Deviation Chart ──────────────
+    # -- Railroad Deviation Chart --------------
     st.markdown(f"<h4 style='color:{C['TEXT']}; margin:8px 0 4px 0;'>Railroad Deviation</h4>", unsafe_allow_html=True)
 
     dev_rrs, pct_ly_vals, pct_avg_vals, diff_ly_vals, diff_avg_vals = [], [], [], [], []
     for rr in all_rrs:
-        m = metrics(rr=rr)
+        m = metrics(rr=rr, state=_st_filter)
         hide = is_split and rr in ("CP", "CPKC")
         if not hide:
             dev_rrs.append(rr)
@@ -542,15 +514,15 @@ with tab1:
     rr_layout = base_layout(
         barmode='group',
         height=max(300, len(dev_rrs) * 52 + 80),
-        title=dict(text=f"Deviation from LY & 6-Yr Avg — Week {max_wk}", font=dict(color=C["TEXT"], size=13)),
+        title=dict(text=f"Deviation from LY & 6-Yr Avg - Week {max_wk}", font=dict(color=C["TEXT"], size=13)),
     )
     rr_layout['xaxis'].update(tickformat='+.0f', ticksuffix='%')
     fig_rr.update_layout(**rr_layout)
-    st.plotly_chart(fig_rr, width='stretch')
+    st.plotly_chart(fig_rr, use_container_width=True)
 
     st.markdown("---")
 
-    # ── State Deviation Chart ─────────────────
+    # -- State Deviation Chart -----------------
     st.markdown(f"<h4 style='color:{C['TEXT']}; margin:8px 0 4px 0;'>State Deviation</h4>", unsafe_allow_html=True)
 
     state_group = st.radio(
@@ -634,16 +606,16 @@ with tab1:
     st_layout = base_layout(
         barmode='group',
         height=max(500, len(s_names) * 34 + 80),
-        title=dict(text=f"State Deviation — Week {max_wk}", font=dict(color=C["TEXT"], size=13)),
+        title=dict(text=f"State Deviation - Week {max_wk}", font=dict(color=C["TEXT"], size=13)),
     )
     st_layout['xaxis'].update(tickformat='+.0f', ticksuffix='%')
     fig_st.update_layout(**st_layout)
-    st.plotly_chart(fig_st, width='stretch')
+    st.plotly_chart(fig_st, use_container_width=True)
 
 
-# ══════════════════════════════════════════════
-# TAB 2 — RAILROAD BY MONTH
-# ══════════════════════════════════════════════
+# 
+# TAB 2 - RAILROAD BY MONTH
+# 
 with tab2:
     c1, c2, c3 = st.columns([2, 1.5, 2])
     with c1:
@@ -693,7 +665,7 @@ with tab2:
             marker_color=RR_COLORS.get(rr, C["PRIMARY"]),
         ))
 
-    title2 = f"Bushels by Month & Railroad" + (f" — {sel_yr2}" if sel_yr2 != "All Years" else " — All Years")
+    title2 = f"Bushels by Month & Railroad" + (f" - {sel_yr2}" if sel_yr2 != "All Years" else " - All Years")
     lay2 = base_layout(
         barmode='stack',
         height=480,
@@ -702,12 +674,12 @@ with tab2:
     lay2['xaxis'].update(categoryorder='array', categoryarray=MONTH_ORDER)
     lay2['yaxis'].update(tickformat='.2s')
     fig2.update_layout(**lay2)
-    st.plotly_chart(fig2, width='stretch')
+    st.plotly_chart(fig2, use_container_width=True)
 
 
-# ══════════════════════════════════════════════
-# TAB 3 — STATE MAP
-# ══════════════════════════════════════════════
+# 
+# TAB 3 - STATE MAP
+# 
 with tab3:
     c1, c2, c3 = st.columns([1.5, 2, 2])
     with c1:
@@ -806,7 +778,7 @@ with tab3:
             subunitcolor=C["BORDER"],
         ),
         title=dict(
-            text=f"State {metric3} — {sel_yr3}",
+            text=f"State {metric3} - {sel_yr3}",
             font=dict(color=C["TEXT"], size=13),
         ),
         margin=dict(l=0, r=0, t=40, b=0),
@@ -816,7 +788,7 @@ with tab3:
     # Layout: map left, detail right
     map_col, detail_col = st.columns([3, 2])
     with map_col:
-        st.plotly_chart(fig3, width='stretch')
+        st.plotly_chart(fig3, use_container_width=True)
 
     with detail_col:
         st.markdown(f"<p style='color:{C['MID']}; font-size:0.8rem; margin-bottom:4px;'>State Detail</p>", unsafe_allow_html=True)
@@ -843,18 +815,18 @@ with tab3:
             lay3b = base_layout(
                 height=300,
                 title=dict(
-                    text=f"{detail_state} by Railroad — {sel_yr3}",
+                    text=f"{detail_state} by Railroad - {sel_yr3}",
                     font=dict(color=C["TEXT"], size=12),
                 ),
             )
             lay3b['xaxis'].update(tickformat='.2s')
             fig3b.update_layout(**lay3b)
-            st.plotly_chart(fig3b, width='stretch')
+            st.plotly_chart(fig3b, use_container_width=True)
 
 
-# ══════════════════════════════════════════════
-# TAB 4 — WEEKLY BY YEAR
-# ══════════════════════════════════════════════
+# 
+# TAB 4 - WEEKLY BY YEAR
+# 
 with tab4:
     c1, c2, c3 = st.columns([2, 2, 2])
     with c1:
@@ -890,7 +862,7 @@ with tab4:
             "#a78bfa", "#fb923c", "#34d399", "#4aa3dc",
         ]
 
-        # ── Weekly bar chart ──────────────────
+        # -- Weekly bar chart ------------------
         fig4a = go.Figure()
         for i, yr in enumerate(sorted(sel_yrs4)):
             sub = wk_grp[wk_grp['Market Year'] == yr].sort_values('MY Week')
@@ -908,9 +880,9 @@ with tab4:
         )
         lay4a['yaxis'].update(tickformat='.2s')
         fig4a.update_layout(**lay4a)
-        st.plotly_chart(fig4a, width='stretch')
+        st.plotly_chart(fig4a, use_container_width=True)
 
-        # ── Cumulative line chart ─────────────
+        # -- Cumulative line chart -------------
         fig4b = go.Figure()
         for i, yr in enumerate(sorted(sel_yrs4)):
             sub = wk_grp[wk_grp['Market Year'] == yr].sort_values('MY Week').copy()
@@ -929,12 +901,12 @@ with tab4:
         )
         lay4b['yaxis'].update(tickformat='.2s')
         fig4b.update_layout(**lay4b)
-        st.plotly_chart(fig4b, width='stretch')
+        st.plotly_chart(fig4b, use_container_width=True)
 
 
-# ══════════════════════════════════════════════
-# TAB 5 — YEARLY BY RAILROAD
-# ══════════════════════════════════════════════
+# 
+# TAB 5 - YEARLY BY RAILROAD
+# 
 with tab5:
     c1, c2, c3 = st.columns([1.5, 2, 2])
     with c1:
@@ -975,18 +947,18 @@ with tab5:
         height=480,
         title=dict(
             text="Annual Shipments by Railroad"
-                 + (f" — Focus: {focus_rr5}" if focus_rr5 != "All" else ""),
+                 + (f" - Focus: {focus_rr5}" if focus_rr5 != "All" else ""),
             font=dict(color=C["TEXT"], size=13),
         ),
     )
     lay5['yaxis'].update(tickformat='.2s')
     fig5.update_layout(**lay5)
-    st.plotly_chart(fig5, width='stretch')
+    st.plotly_chart(fig5, use_container_width=True)
 
 
-# ══════════════════════════════════════════════
-# TAB 6 — SUMMARY
-# ══════════════════════════════════════════════
+# 
+# TAB 6 - SUMMARY
+# 
 with tab6:
     c1, c2 = st.columns([2, 2])
     with c1:
@@ -1025,16 +997,16 @@ with tab6:
         min_yr6 = min(sel_yrs6)
         max_yr6 = max(sel_yrs6)
 
-        # ── KPI Row ───────────────────────────
+        # -- KPI Row ---------------------------
         k1, k2, k3, k4 = st.columns(4)
         k1.metric(f"Total Bu ({cur_yr6})", fbu(cur_total6))
         k2.metric("vs Last Year", fpct(pct_ly6), delta=fdiff(cur_total6, ly_total6))
         k3.metric("Current Week", str(cur_wk6))
-        k4.metric("Data Range", f"{min_yr6}–{max_yr6}")
+        k4.metric("Data Range", f"{min_yr6}-{max_yr6}")
 
         st.markdown("---")
 
-        # ── Stacked bar by year ───────────────
+        # -- Stacked bar by year ---------------
         dfc6_sel = dfc6[dfc6['Market Year'].isin(sel_yrs6)]
         dfc6_cp  = prep_df(dfc6_sel, "Combined")
         yr_rr6   = dfc6_cp.groupby(['Market Year', 'Railroad'], as_index=False)['Est Bushels'].sum()
@@ -1058,9 +1030,9 @@ with tab6:
         )
         lay6a['yaxis'].update(tickformat='.2s')
         fig6a.update_layout(**lay6a)
-        st.plotly_chart(fig6a, width='stretch')
+        st.plotly_chart(fig6a, use_container_width=True)
 
-        # ── Cumulative weekly line ────────────
+        # -- Cumulative weekly line ------------
         YEAR_PAL6 = [C["POS"], C["BLUE"], C["GOLD"], C["NEG"], "#a78bfa", "#fb923c"]
         wk_grp6 = dfc6_sel.groupby(['Market Year', 'MY Week'], as_index=False)['Est Bushels'].sum()
 
@@ -1082,4 +1054,27 @@ with tab6:
         )
         lay6b['yaxis'].update(tickformat='.2s')
         fig6b.update_layout(**lay6b)
-        st.plotly_chart(fig6b, width='stretch')
+        st.plotly_chart(fig6b, use_container_width=True)
+
+# ─────────────────────────────────────────────
+# DISCLAIMER FOOTER
+# ─────────────────────────────────────────────
+_cur_year = datetime.now().year
+st.markdown("---")
+st.markdown(
+    f"""
+<div style="color:{C['DIM']};font-size:0.70rem;line-height:1.6;padding:12px 4px 20px 4px;text-align:justify;">
+Trading commodity futures, options on futures, cash commodities, and over-the-counter derivative products involves
+substantial risk of loss and may not be suitable for all investors. This communication is provided for informational
+purposes only and does not constitute investment advice, a recommendation, or an offer or solicitation to buy or sell
+any futures, options, cash commodities, or derivative products. John Stewart &amp; Associates, Inc. does not accept
+orders to buy or sell any financial instruments via email. The information contained herein has been obtained from
+sources believed to be reliable; however, its accuracy and completeness are not guaranteed. Any opinions expressed are
+solely those of the author, are subject to change without notice, and should not be relied upon as a basis for
+investment decisions. Past performance is not indicative of future results. This message may contain confidential or
+proprietary information intended solely for the use of the designated recipient.
+&copy; John Stewart &amp; Associates, Inc. {_cur_year}
+</div>
+""",
+    unsafe_allow_html=True,
+)
